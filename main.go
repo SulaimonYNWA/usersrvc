@@ -20,7 +20,8 @@ func main() {
 
 func Start(database *sql.DB)  {
 	for {
-		login, password := services.Authorization()
+		login, password,name, surname, gender,age:= services.Authorization()
 		services.Login(database,login,password)
+		services.Registration(database, name,surname,gender,login,password, age)
 	}
 }
