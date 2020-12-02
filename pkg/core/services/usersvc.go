@@ -2,6 +2,7 @@ package services
 
 import (
 	"Bank/models"
+	"bufio"
 	"database/sql"
 	"fmt"
 	"os"
@@ -14,7 +15,7 @@ const AuthorizationOperation = `1.Авторизация
 const LoginOperation = `Введите логин и пароль: `
 
 
-func Authorization()(login, password, name, surname, gender string, age int64){
+func Authorization(database *sql.DB)(login, password, name, surname, gender string, age int64){
 	fmt.Println(AuthorizationOperation)
 	var number int64
 	fmt.Scan(&number)
@@ -26,6 +27,7 @@ func Authorization()(login, password, name, surname, gender string, age int64){
 		fmt.Println(`password: `)
 		fmt.Scan(&password)
 	return
+
 	case 2:
 		fmt.Println("Goodbye")
 		os.Exit(0)
@@ -42,6 +44,8 @@ func Authorization()(login, password, name, surname, gender string, age int64){
 		fmt.Scan(&login)
 		fmt.Println(`password: `)
 		fmt.Scan(&password)
+		Registration(database, name,surname,gender,login,password, age)
+		return
 
 	default:
 		fmt.Println("repeat again")
@@ -60,16 +64,44 @@ func Login(database *sql.DB, login, password string){ //(ok bool)
 		&User.Gender,
 		&User.Login,
 		&User.Password,
+		&User.IsAdmin,
 		&User.Remove,
 		)
 	if err != nil{
 		fmt.Println(err, `mistake`)
 	}
-	//if User.ID >0{
-	//	return true
-	//}
-	//return false
 	fmt.Println(User)
+
+	if User.IsAdmin {
+		fmt.Println(
+			`1.add ATM
+2.no, exit'`)
+		var number int
+		fmt.Scan(&number)
+		switch number {
+		case 1:
+			address := bufio.NewReader(os.Stdin)
+			fmt.Println(`enter address: `)
+			text, _:= address.ReadString('\n')
+			fmt.Scan(&text)
+			//fmt.Print(text, ` ` )
+			text2 := ""
+			fmt.Scanln(&text2)
+			//fmt.Print(text2, ` `)
+			var ln string
+			fmt.Scanln(&ln)
+
+			var Address string
+			Address = text+` `+text2+ ` `+ln
+			//fmt.Println(text, ``, text2,``, ln)
+			fmt.Println(Address)
+			//models.AddATM(database, text, text2, ln)
+			models.AddATM(database, Address)
+		case 2:
+			fmt.Println("Goodbye")
+			os.Exit(0)
+		}
+	}
 }
 
 func Registration(database *sql.DB, name,surname,gender, login, password string, age int64) (err error) {

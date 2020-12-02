@@ -18,10 +18,10 @@ func main() {
 
 }
 
-func Start(database *sql.DB)  {
+func Start(database *sql.DB)(name, surname, gender string, age int64) {
 	for {
-		login, password,name, surname, gender,age:= services.Authorization()
+		login, password,name, surname, gender,age:= services.Authorization(database)
 		services.Login(database,login,password)
-		services.Registration(database, name,surname,gender,login,password, age)
+		return  name,surname,gender,age
 	}
 }

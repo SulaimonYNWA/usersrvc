@@ -8,5 +8,6 @@ type User struct {
 	Gender string
 	Login string
 	Password string
+	IsAdmin bool
 	Remove bool
 }
