@@ -23,3 +23,5 @@ address text not null,
 works boolean not null default true
 );`
 
+//const CreateTableArchive = `create table if not exists archive(`
+
