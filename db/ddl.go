@@ -23,5 +23,13 @@ address text not null,
 works boolean not null default true
 );`
 
-//const CreateTableArchive = `create table if not exists archive(`
+const CreateTransactionTable = `create table if not exists archive(
+	id integer primary key autoincrement,
+	date text not null,
+	time text not null,
+	amount integer not null,
+	sender_number integer not null,
+	receiver_number integer not null,
+	available_limit integer not null
+)`
 

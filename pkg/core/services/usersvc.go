@@ -8,15 +8,15 @@ import (
 	"log"
 	"os"
 )
+const LoginOperation = `Введите логин и пароль:`
 
 const AuthorizationUser = `1. Показать Баланс
 2.Перевод Денег
 3.Оплата Услуг
 4.История транзакций
 5.Показать список банкоматов
-6.Выход`
+0.Выход`
 
-const LoginOperation = `Введите логин и пароль:`
 const AuthorizedOperation = `1. Показать Баланс
 2.Перевод Денег
 3.Оплата Услуг
@@ -25,7 +25,7 @@ const AuthorizedOperation = `1. Показать Баланс
 6.Добавить Адресс банкомата
 7.Показать пользователей
 8.Добавить пользователя
-9.Выход`
+0.Выход`
 
 
 func Login(database *sql.DB)(ok bool, id int64, isAdmin bool) {
@@ -63,6 +63,7 @@ func Login(database *sql.DB)(ok bool, id int64, isAdmin bool) {
 	} else {return false, User.ID,User.IsAdmin}
 
 	return true, User.ID, User.IsAdmin
+	return
 }
 
 
@@ -90,13 +91,16 @@ func UserAuthorization (database *sql.DB, id int64)  {
 		fmt.Println(`Ops....`)
 
 	case 4:
-		fmt.Println(`история транзакций:`)
-
+		fmt.Println("Input number of Account:")
+		var number int64
+		fmt.Scan(&number)
+		fmt.Println(`Ваша история транзакций:`)
+		Archive(database, number)
 	case 5:
 		fmt.Println(`список банкоматов: `)
 		ATMs(database)
 
-	case 6:
+	case 0:
 
 		os.Exit(0)
 	}
@@ -126,7 +130,11 @@ func Authorization(database *sql.DB, id int64){
 		fmt.Println(`Wait...`)
 
 	case 4:
-		fmt.Println(`история транзакций:`)
+		fmt.Println("Input number of Account:")
+		var number int64
+		fmt.Scan(&number)
+		fmt.Println(`Ваша история транзакций:`)
+		Archive(database, number)
 
 	case 5:
 		fmt.Println(`список банкоматов: `)
@@ -138,11 +146,12 @@ func Authorization(database *sql.DB, id int64){
 	case 7:
 		fmt.Println(`Список пользователей:`)
 		Users(database)
+
 	case 8:
 
 		Registration(database)
 
-	case 9:
+	case 0:
 		os.Exit(0)
 		fmt.Println(`Exit`)
 
@@ -163,9 +172,8 @@ where user_id = ($1)`, id)
 	fmt.Println(amount)
 }
 
-
 //2
-func Transfer(database *sql.DB, id, sum int64, number2 int64) {
+func Transfer(database *sql.DB, id, sum, number2 int64) {
 	var amount,number int64
 	row := database.QueryRow(`select amount, number from accaunts where user_id =($1)`, id)
 	_ = row.Scan(
@@ -173,30 +181,63 @@ func Transfer(database *sql.DB, id, sum int64, number2 int64) {
 		&number,
 	)
 	newAmount:=amount-sum
+	if amount < sum {
+		log.Println(`недостаточно средств`)
+		return
+	}else {
 	fmt.Println(`number:`,number,`amount: `,amount, `amount - sum :`, newAmount)
 	_, err := database.Exec(`update accaunts set amount = ($1) where number = ($2)`, newAmount, number)
 	if err != nil {
 		log.Println(`cannot transfer money`, err)
+		return
+	}
 	}
 
 	row = database.QueryRow(`select amount from accaunts where number = ($2) `, number2)
 	_ = row.Scan(
 		&amount,
 	)
-	newAmount = amount+sum
-	fmt.Println(`number:`,number2,`amount: `,amount, `amount+sum: `, newAmount)
+	newReceiverAmount := amount+sum
+	fmt.Println(`number:`,number2,`amount: `,amount, `amount+sum: `, newReceiverAmount)
 
-	_, err = database.Exec(`update accaunts set amount = ($1) where number = ($2)`, newAmount, number2)
+	_, err := database.Exec(`update accaunts set amount = ($1) where number = ($2)`, newReceiverAmount, number2)
 	if err != nil {
 		log.Println(`cannot receive money`, err)
+		return
 	}
+	models.AddTransaction(database, number, number2, sum, newAmount)
 }
 
 //3 Оплата услуг
 
 
 //4 история транзакций
+func Archive(database *sql.DB, sender int64)  {
+	transaction := models.Transaction{}
 
+	rows, err := database.Query(`select id, date,time,amount, sender_number, receiver_number, available_limit from archive  where sender_number = ($1)`, sender)
+	if err != nil {
+		log.Fatal(err, `users are not selected`)
+	}
+	defer rows.Close()
+	fmt.Println(`ID 	Date         Time      Amount    Your number      Receiver      Rest `)
+
+	for rows.Next(){
+		err:= rows.Scan(
+			&transaction.ID,
+			&transaction.Date,
+			&transaction.Time,
+			&transaction.Amount,
+			&transaction.SenderNumber,
+			&transaction.ReceiverNumber,
+			&transaction.AvailableLimit,
+		)
+		if err != nil {
+			log.Fatal(err, ` not selected archive`)
+		}
+	fmt.Println(transaction.ID, `  `, transaction.Date, `  `, transaction.Time, `     `, transaction.Amount, `         `, transaction.SenderNumber, `         `, transaction.ReceiverNumber, `     `, transaction.AvailableLimit)
+	}
+}
 
 //5 список банкоматов
 func ATMs(database *sql.DB) {
@@ -278,6 +319,7 @@ func Users(database *sql.DB)  {
 		}
 		fmt.Println(id, name, surname, age)
 	}
+	return
 }
 
 

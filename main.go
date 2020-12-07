@@ -23,7 +23,7 @@ func main() {
 
 }
 const AuthorizationOperation = `1.Авторизация
-2.Выйти`
+0.Выйти`
 var User models.User
 
 func Start(database *sql.DB){
@@ -56,13 +56,15 @@ func Start(database *sql.DB){
 			fmt.Println(ok)
 			}else {fmt.Println(`damn..`)}
 
-		case 2:
+		case 0:
 			os.Exit(0)
 		default:
 			fmt.Println(`repeat again`)
 		}
-		//login, password,name, surname, gender,age:= services.Authorization(database)
-		//services.Login(database,login,password)
-		//return  name,surname,gender,age
+
 	}
 }
+
+//marshal and unmarshal - read
+// display all users from DB in JSON format and xml
+// + finish last project.
