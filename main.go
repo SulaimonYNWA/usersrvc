@@ -24,9 +24,10 @@ func main() {
 }
 const AuthorizationOperation = `1.Авторизация
 0.Выйти`
-var User models.User
 
 func Start(database *sql.DB){
+	var User models.User
+
 	for {
 		fmt.Println(AuthorizationOperation)
 		fmt.Println(`Выберите команду:`)
