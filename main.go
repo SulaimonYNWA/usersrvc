@@ -30,6 +30,7 @@ func Start(database *sql.DB){
 
 }
 func intro(database *sql.DB)  {
+
 	for {
 		fmt.Println(AuthorizationOperation)
 		fmt.Println(`Выберите команду:`)
