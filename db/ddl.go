@@ -33,3 +33,4 @@ const CreateTransactionTable = `create table if not exists archive(
 	available_limit integer not null
 )`
 
+

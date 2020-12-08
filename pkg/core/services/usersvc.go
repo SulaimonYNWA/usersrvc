@@ -1,6 +1,7 @@
 package services
 
 import (
+	"Bank/db"
 	"Bank/models"
 	"bufio"
 	"database/sql"
@@ -186,7 +187,7 @@ func Transfer(database *sql.DB, id, sum, number2 int64) {
 		return
 	}else {
 	fmt.Println(`number:`,number,`amount: `,amount, `amount - sum :`, newAmount)
-	_, err := database.Exec(`update accaunts set amount = ($1) where number = ($2)`, newAmount, number)
+	_, err := database.Exec(db.UpdateSenderAmount, newAmount, number)
 	if err != nil {
 		log.Println(`cannot transfer money`, err)
 		return
@@ -200,7 +201,7 @@ func Transfer(database *sql.DB, id, sum, number2 int64) {
 	newReceiverAmount := amount+sum
 	fmt.Println(`number:`,number2,`amount: `,amount, `amount+sum: `, newReceiverAmount)
 
-	_, err := database.Exec(`update accaunts set amount = ($1) where number = ($2)`, newReceiverAmount, number2)
+	_, err := database.Exec(db.UpdateReceiverAmount, newReceiverAmount, number2)
 	if err != nil {
 		log.Println(`cannot receive money`, err)
 		return

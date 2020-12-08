@@ -24,9 +24,12 @@ func main() {
 }
 const AuthorizationOperation = `1.Авторизация
 0.Выйти`
-var User models.User
 
 func Start(database *sql.DB){
+	intro(database)
+
+}
+func intro(database *sql.DB)  {
 	for {
 		fmt.Println(AuthorizationOperation)
 		fmt.Println(`Выберите команду:`)
@@ -35,14 +38,16 @@ func Start(database *sql.DB){
 		if err != nil {
 			log.Println(`error on line 35 main.go`)
 		}
+		var User models.User
 		switch cmd {
+
 		case 1:
 			ok, id,isAdmin := services.Login(database)
 			row := database.QueryRow(`select id, isAdmin from users where id = ($1) and isAdmin = ($2) `, id, isAdmin)
 			_ = row.Scan(
 				&User.ID,
 				&User.IsAdmin,
-				)
+			)
 			if ok {
 				if User.IsAdmin {
 					fmt.Println(`Вы обладате правами и возможностями админа.`)
@@ -53,7 +58,7 @@ func Start(database *sql.DB){
 					services.UserAuthorization(database, id)
 				}
 				//services.Authorization(database, id)
-			fmt.Println(ok)
+				fmt.Println(ok)
 			}else {fmt.Println(`damn..`)}
 
 		case 0:
@@ -65,6 +70,3 @@ func Start(database *sql.DB){
 	}
 }
 
-//marshal and unmarshal - read
-// display all users from DB in JSON format and xml
-// + finish last project.
