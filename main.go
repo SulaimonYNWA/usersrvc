@@ -13,27 +13,28 @@ import (
 
 func main() {
 	database, err := sql.Open("sqlite3", "test")
-		if err!=nil{
-			log.Fatal("error1", err)
-		}else {
-			fmt.Println("CONNECTION TO DB IS SUCCESS")
-		}
+	if err != nil {
+		log.Fatal("error1", err)
+	} else {
+		fmt.Println("CONNECTION TO DB IS SUCCESS")
+	}
 	db.DBInit(database)
 	Start(database)
 
 }
-const AuthorizationOperation = `1.Авторизация
-0.Выйти`
 
-func Start(database *sql.DB){
+const AuthorizationOperation = `1.Authorization
+0.Exit`
+
+func Start(database *sql.DB) {
 	intro(database)
 
 }
-func intro(database *sql.DB)  {
+func intro(database *sql.DB) {
 
 	for {
 		fmt.Println(AuthorizationOperation)
-		fmt.Println(`Выберите команду:`)
+		fmt.Println(`select a command:`)
 		var cmd int64
 		_, err := fmt.Scan(&cmd)
 		if err != nil {
@@ -43,7 +44,7 @@ func intro(database *sql.DB)  {
 		switch cmd {
 
 		case 1:
-			ok, id,isAdmin := services.Login(database)
+			ok, id, isAdmin := services.Login(database)
 			row := database.QueryRow(`select id, isAdmin from users where id = ($1) and isAdmin = ($2) `, id, isAdmin)
 			_ = row.Scan(
 				&User.ID,
@@ -51,16 +52,17 @@ func intro(database *sql.DB)  {
 			)
 			if ok {
 				if User.IsAdmin {
-					fmt.Println(`Вы обладате правами и возможностями админа.`)
+					fmt.Println(`You are admin.`)
 					services.Authorization(database, id)
 				}
-				if !User.IsAdmin{
-					fmt.Println(`Вы обладате правами и возможностями пользователя`)
+				if !User.IsAdmin {
+					fmt.Println(`You are user`)
 					services.UserAuthorization(database, id)
 				}
-				//services.Authorization(database, id)
 				fmt.Println(ok)
-			}else {fmt.Println(`damn..`)}
+			} else {
+				fmt.Println(`not ok`)
+			}
 
 		case 0:
 			os.Exit(0)
@@ -70,4 +72,3 @@ func intro(database *sql.DB)  {
 
 	}
 }
-
