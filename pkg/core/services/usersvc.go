@@ -63,7 +63,6 @@ func Login(database *sql.DB) (ok bool, id int64, isAdmin bool) {
 func UserAuthorization(database *sql.DB, id int64) {
 	fmt.Println(AuthorizationUser)
 	fmt.Println(`Select command: `)
-
 	var number int64
 	fmt.Scan(&number)
 	switch number {
