@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 )
+
 const LoginOperation = `Enter login and password:`
 
 const AuthorizationUser = `1. Show balance
@@ -26,8 +27,7 @@ const AuthorizedOperation = `1. Show balance
 7.Add user
 0.Exit`
 
-
-func Login(database *sql.DB)(ok bool, id int64, isAdmin bool) {
+func Login(database *sql.DB) (ok bool, id int64, isAdmin bool) {
 	var login, password string
 	fmt.Println(LoginOperation)
 	fmt.Println(`login: `)
@@ -52,21 +52,15 @@ func Login(database *sql.DB)(ok bool, id int64, isAdmin bool) {
 
 	if User.ID > 0 {
 		return true, User.ID, User.IsAdmin
-		//if User.IsAdmin {
-		//	fmt.Println(`Вы обладате правами и возможностями админа.`)
-		//	Authorization(database, id)
-		//}else if !User.IsAdmin {
-		//	fmt.Println(`Вы обладате правами и возможностями пользователя`)
-		//	UserAuthorization(database, id)
-		//}
-	} else {return false, User.ID,User.IsAdmin}
+	} else {
+		return false, User.ID, User.IsAdmin
+	}
 
 	return true, User.ID, User.IsAdmin
 	return
 }
 
-
-func UserAuthorization (database *sql.DB, id int64)  {
+func UserAuthorization(database *sql.DB, id int64) {
 	fmt.Println(AuthorizationUser)
 	fmt.Println(`Select command: `)
 
@@ -85,8 +79,6 @@ func UserAuthorization (database *sql.DB, id int64)  {
 
 		Transfer(database, id, sum, number2)
 
-
-
 	case 3:
 		fmt.Println("Input number of Account:")
 		var number int64
@@ -103,7 +95,7 @@ func UserAuthorization (database *sql.DB, id int64)  {
 	}
 }
 
-func Authorization(database *sql.DB, id int64){
+func Authorization(database *sql.DB, id int64) {
 	fmt.Println(AuthorizedOperation)
 	fmt.Println(`select command: `)
 	var number int64
@@ -121,7 +113,6 @@ func Authorization(database *sql.DB, id int64){
 		fmt.Scan(&number2)
 
 		Transfer(database, id, sum, number2)
-
 
 	case 3:
 		fmt.Println("Input number of Account:")
@@ -167,31 +158,31 @@ where user_id = ($1)`, id)
 
 //2
 func Transfer(database *sql.DB, id, sum, number2 int64) {
-	var amount,number int64
+	var amount, number int64
 	row := database.QueryRow(`select amount, number from accaunts where user_id =($1)`, id)
 	_ = row.Scan(
 		&amount,
 		&number,
 	)
-	newAmount:=amount-sum
+	newAmount := amount - sum
 	if amount < sum {
 		log.Println(`not enough money on your account`)
 		return
-	}else {
-	fmt.Println(`number:`,number,`amount: `,amount, `updated amount:`, newAmount)
-	_, err := database.Exec(db.UpdateSenderAmount, newAmount, number)
-	if err != nil {
-		log.Println(`cannot transfer money`, err)
-		return
-	}
+	} else {
+		fmt.Println(`number:`, number, `amount: `, amount, `updated amount:`, newAmount)
+		_, err := database.Exec(db.UpdateSenderAmount, newAmount, number)
+		if err != nil {
+			log.Println(`cannot transfer money`, err)
+			return
+		}
 	}
 
 	row = database.QueryRow(`select amount from accaunts where number = ($2) `, number2)
 	_ = row.Scan(
 		&amount,
 	)
-	newReceiverAmount := amount+sum
-	fmt.Println(`number:`,number2,`amount: `,amount, `amount+sum: `, newReceiverAmount)
+	newReceiverAmount := amount + sum
+	fmt.Println(`number:`, number2, `amount: `, amount, `amount+sum: `, newReceiverAmount)
 
 	_, err := database.Exec(db.UpdateReceiverAmount, newReceiverAmount, number2)
 	if err != nil {
@@ -203,9 +194,8 @@ func Transfer(database *sql.DB, id, sum, number2 int64) {
 
 //3 Оплата услуг
 
-
 //4 история транзакций
-func Archive(database *sql.DB, sender int64)  {
+func Archive(database *sql.DB, sender int64) {
 	transaction := models.Transaction{}
 
 	rows, err := database.Query(`select id, date,time,amount, sender_number, receiver_number, available_limit from archive  where sender_number = ($1)`, sender)
@@ -215,8 +205,8 @@ func Archive(database *sql.DB, sender int64)  {
 	defer rows.Close()
 	fmt.Println(`ID 	Date         Time      Amount    Your number      Receiver      Rest `)
 
-	for rows.Next(){
-		err:= rows.Scan(
+	for rows.Next() {
+		err := rows.Scan(
 			&transaction.ID,
 			&transaction.Date,
 			&transaction.Time,
@@ -228,7 +218,7 @@ func Archive(database *sql.DB, sender int64)  {
 		if err != nil {
 			log.Println(err, ` not selected archive`)
 		}
-	fmt.Println(transaction.ID, `  `, transaction.Date, `  `, transaction.Time, `     `, transaction.Amount, `         `, transaction.SenderNumber, `         `, transaction.ReceiverNumber, `     `, transaction.AvailableLimit)
+		fmt.Println(transaction.ID, `  `, transaction.Date, `  `, transaction.Time, `     `, transaction.Amount, `         `, transaction.SenderNumber, `         `, transaction.ReceiverNumber, `     `, transaction.AvailableLimit)
 	}
 }
 
@@ -241,57 +231,56 @@ func ATMs(database *sql.DB) {
 		log.Println(err, `not selected`)
 	}
 	defer rows.Close()
-	for rows.Next(){
-		err:= rows.Scan(
+	for rows.Next() {
+		err := rows.Scan(
 			&id,
 			&address,
 		)
 		if err != nil {
 			log.Println(err, `not selected next`)
 		}
-	fmt.Println(id, address)
+		fmt.Println(id, address)
 	}
-		log.Println(id, address)
+	log.Println(id, address)
 
 }
 
-
 //6 добавть банкомат
-func AddNewATM(database *sql.DB)(ok bool) {
+func AddNewATM(database *sql.DB) (ok bool) {
 
-		fmt.Println(
-			`1.add ATM
+	fmt.Println(
+		`1.add ATM
 2.no, exit'`)
-		var number int
-		fmt.Scan(&number)
-		switch number {
-		case 1:
-			fmt.Println(`enter a new address: `)
-			var s string
-			fmt.Scan(&s)
-			reader := bufio.NewReader(os.Stdin)
-			Address, err := reader.ReadString('\n')
-			if err != nil {
-				log.Printf(`cant read command: %v`,err)
-			}
-			fmt.Println(s)
-			sprintf := fmt.Sprintf(`%s %s`, s, Address)
-			fmt.Println(sprintf)
-			_, err = models.AddATM(database, sprintf)
-			if err != nil {
-				fmt.Println(`not ok`, err)
-			} else {
-				fmt.Println(`ok`)
+	var number int
+	fmt.Scan(&number)
+	switch number {
+	case 1:
+		fmt.Println(`enter a new address: `)
+		var s string
+		fmt.Scan(&s)
+		reader := bufio.NewReader(os.Stdin)
+		Address, err := reader.ReadString('\n')
+		if err != nil {
+			log.Printf(`cant read command: %v`, err)
 		}
-		case 2:
-			fmt.Println("Goodbye")
-			os.Exit(0)
+		fmt.Println(s)
+		sprintf := fmt.Sprintf(`%s %s`, s, Address)
+		fmt.Println(sprintf)
+		_, err = models.AddATM(database, sprintf)
+		if err != nil {
+			fmt.Println(`not ok`, err)
+		} else {
+			fmt.Println(`ok`)
 		}
+	case 2:
+		fmt.Println("Goodbye")
+		os.Exit(0)
+	}
 	return
 }
 
 //7 список пользователей
-func Users(database *sql.DB)  {
+func Users(database *sql.DB) {
 	var id, age int64
 	var name, surname string
 
@@ -300,8 +289,8 @@ func Users(database *sql.DB)  {
 		log.Println(err, `users are not selected`)
 	}
 	defer rows.Close()
-	for rows.Next(){
-		err:= rows.Scan(
+	for rows.Next() {
+		err := rows.Scan(
 			&id,
 			&age,
 			&name,
@@ -315,13 +304,10 @@ func Users(database *sql.DB)  {
 	return
 }
 
-
-
-
 //8 добавить пользователя
-func Registration(database *sql.DB ) (err error) {
+func Registration(database *sql.DB) (err error) {
 	//var User models.User
-	var name,surname,gender, login, password string
+	var name, surname, gender, login, password string
 	var age int64
 	fmt.Println(`name and surname:`)
 	fmt.Scan(&name)
@@ -335,8 +321,8 @@ func Registration(database *sql.DB ) (err error) {
 	fmt.Scan(&login)
 	fmt.Println(`password: `)
 	fmt.Scan(&password)
-	_, s := database.Exec(`insert into users(name, surname,age, gender, login, password) values (($1),($2),($3),($4),($5),($6))`, name, surname, age, gender, login,password)
-	if s!=nil {
+	_, s := database.Exec(`insert into users(name, surname,age, gender, login, password) values (($1),($2),($3),($4),($5),($6))`, name, surname, age, gender, login, password)
+	if s != nil {
 		fmt.Println(`cannot register the new user`, s)
 		return s
 	}
