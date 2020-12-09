@@ -9,24 +9,22 @@ import (
 	"log"
 	"os"
 )
-const LoginOperation = `Введите логин и пароль:`
+const LoginOperation = `Enter login and password:`
 
-const AuthorizationUser = `1. Показать Баланс
-2.Перевод Денег
-3.Оплата Услуг
-4.История транзакций
-5.Показать список банкоматов
-0.Выход`
+const AuthorizationUser = `1. Show balance
+2.Transfer cash
+3.Archive
+4.List of ATMs
+0.Exit`
 
-const AuthorizedOperation = `1. Показать Баланс
-2.Перевод Денег
-3.Оплата Услуг
-4.История транзакций
-5.Показать список банкоматов
-6.Добавить Адресс банкомата
-7.Показать пользователей
-8.Добавить пользователя
-0.Выход`
+const AuthorizedOperation = `1. Show balance
+2.Transfer cash
+3.Archive
+4.List of ATMs
+5.Add address of ATM
+6.Show users
+7.Add user
+0.Exit`
 
 
 func Login(database *sql.DB)(ok bool, id int64, isAdmin bool) {
@@ -70,35 +68,33 @@ func Login(database *sql.DB)(ok bool, id int64, isAdmin bool) {
 
 func UserAuthorization (database *sql.DB, id int64)  {
 	fmt.Println(AuthorizationUser)
-	fmt.Println(`выберите команду: `)
+	fmt.Println(`Select command: `)
 
 	var number int64
 	fmt.Scan(&number)
 	switch number {
 	case 1:
-		fmt.Println(`Ваш баланс: `)
+		fmt.Println(`Your balance: `)
 		CheckBalance(database, id)
 	case 2:
 		var sum, number2 int64
-		fmt.Println(`введите сумму: `)
+		fmt.Println(`Input amount: `)
 		fmt.Scanln(&sum)
-		fmt.Println(`Введите номер карты, на которую хотите перевести сумму :`)
+		fmt.Println(`Input number of Receiver :`)
 		fmt.Scanln(&number2)
 
 		Transfer(database, id, sum, number2)
 
 
-	case 3:
-		fmt.Println(`Ops....`)
 
-	case 4:
+	case 3:
 		fmt.Println("Input number of Account:")
 		var number int64
 		fmt.Scan(&number)
-		fmt.Println(`Ваша история транзакций:`)
+		fmt.Println(`Your transactions:`)
 		Archive(database, number)
-	case 5:
-		fmt.Println(`список банкоматов: `)
+	case 4:
+		fmt.Println(`list of ATMs: `)
 		ATMs(database)
 
 	case 0:
@@ -109,46 +105,42 @@ func UserAuthorization (database *sql.DB, id int64)  {
 
 func Authorization(database *sql.DB, id int64){
 	fmt.Println(AuthorizedOperation)
-	fmt.Println(`выберите команду: `)
+	fmt.Println(`select command: `)
 	var number int64
 	fmt.Scan(&number)
 	switch number {
 	case 1:
-		fmt.Println(`Ваш баланс: `)
+		fmt.Println(`your balance: `)
 		CheckBalance(database, id)
 	case 2:
 		var sum, number2 int64
-		fmt.Println(`введите сумму: `)
+		fmt.Println(`input amount: `)
 		fmt.Scan(&sum)
 
-		fmt.Println(`Введите номер карты, на которую хотите перевести сумму :`)
+		fmt.Println(` Input number of Receiver:`)
 		fmt.Scan(&number2)
 
 		Transfer(database, id, sum, number2)
 
-	case 3:
-		//Логика кода такая же как и в предыдущем пункте. Функцию реализую после того как подробно узнаю об оплате услуг.
-		fmt.Println(`Wait...`)
 
-	case 4:
+	case 3:
 		fmt.Println("Input number of Account:")
 		var number int64
 		fmt.Scan(&number)
-		fmt.Println(`Ваша история транзакций:`)
+		fmt.Println(`Your transactions:`)
 		Archive(database, number)
 
-	case 5:
-		fmt.Println(`список банкоматов: `)
+	case 4:
+		fmt.Println(`list of ATMs: `)
 		ATMs(database)
 
-	case 6:
+	case 5:
 
 		AddNewATM(database)
-	case 7:
-		fmt.Println(`Список пользователей:`)
+	case 6:
+		fmt.Println(`List of users:`)
 		Users(database)
-
-	case 8:
+	case 7:
 
 		Registration(database)
 
@@ -183,10 +175,10 @@ func Transfer(database *sql.DB, id, sum, number2 int64) {
 	)
 	newAmount:=amount-sum
 	if amount < sum {
-		log.Println(`недостаточно средств`)
+		log.Println(`not enough money on your account`)
 		return
 	}else {
-	fmt.Println(`number:`,number,`amount: `,amount, `amount - sum :`, newAmount)
+	fmt.Println(`number:`,number,`amount: `,amount, `updated amount:`, newAmount)
 	_, err := database.Exec(db.UpdateSenderAmount, newAmount, number)
 	if err != nil {
 		log.Println(`cannot transfer money`, err)
@@ -218,7 +210,7 @@ func Archive(database *sql.DB, sender int64)  {
 
 	rows, err := database.Query(`select id, date,time,amount, sender_number, receiver_number, available_limit from archive  where sender_number = ($1)`, sender)
 	if err != nil {
-		log.Fatal(err, `users are not selected`)
+		log.Println(err, `users are not selected`)
 	}
 	defer rows.Close()
 	fmt.Println(`ID 	Date         Time      Amount    Your number      Receiver      Rest `)
@@ -234,7 +226,7 @@ func Archive(database *sql.DB, sender int64)  {
 			&transaction.AvailableLimit,
 		)
 		if err != nil {
-			log.Fatal(err, ` not selected archive`)
+			log.Println(err, ` not selected archive`)
 		}
 	fmt.Println(transaction.ID, `  `, transaction.Date, `  `, transaction.Time, `     `, transaction.Amount, `         `, transaction.SenderNumber, `         `, transaction.ReceiverNumber, `     `, transaction.AvailableLimit)
 	}
@@ -246,7 +238,7 @@ func ATMs(database *sql.DB) {
 	var address string
 	rows, err := database.Query(`select id, address from ATMs `)
 	if err != nil {
-		log.Fatal(err, `not selected`)
+		log.Println(err, `not selected`)
 	}
 	defer rows.Close()
 	for rows.Next(){
@@ -255,7 +247,7 @@ func ATMs(database *sql.DB) {
 			&address,
 		)
 		if err != nil {
-			log.Fatal(err, `not selected next`)
+			log.Println(err, `not selected next`)
 		}
 	fmt.Println(id, address)
 	}
@@ -280,16 +272,16 @@ func AddNewATM(database *sql.DB)(ok bool) {
 			reader := bufio.NewReader(os.Stdin)
 			Address, err := reader.ReadString('\n')
 			if err != nil {
-				log.Fatalf(`cant read command: %v`,err)
+				log.Printf(`cant read command: %v`,err)
 			}
 			fmt.Println(s)
 			sprintf := fmt.Sprintf(`%s %s`, s, Address)
 			fmt.Println(sprintf)
 			_, err = models.AddATM(database, sprintf)
 			if err != nil {
-				fmt.Println(`vse ploxo`, err)
+				fmt.Println(`not ok`, err)
 			} else {
-				fmt.Println(`vse ok`)
+				fmt.Println(`ok`)
 		}
 		case 2:
 			fmt.Println("Goodbye")
@@ -305,7 +297,7 @@ func Users(database *sql.DB)  {
 
 	rows, err := database.Query(`select id, age, name, surname from users `)
 	if err != nil {
-		log.Fatal(err, `users are not selected`)
+		log.Println(err, `users are not selected`)
 	}
 	defer rows.Close()
 	for rows.Next(){
@@ -331,12 +323,12 @@ func Registration(database *sql.DB ) (err error) {
 	//var User models.User
 	var name,surname,gender, login, password string
 	var age int64
-	fmt.Println(`Ваше имя и фамилия:`)
+	fmt.Println(`name and surname:`)
 	fmt.Scan(&name)
 	fmt.Scan(&surname)
-	fmt.Println(`Ваш возраст:`)
+	fmt.Println(`Age:`)
 	fmt.Scan(&age)
-	fmt.Println(`Пол: `)
+	fmt.Println(`gender: `)
 	fmt.Scan(&gender)
 	fmt.Println(LoginOperation)
 	fmt.Println(`login: `)
@@ -345,7 +337,7 @@ func Registration(database *sql.DB ) (err error) {
 	fmt.Scan(&password)
 	_, s := database.Exec(`insert into users(name, surname,age, gender, login, password) values (($1),($2),($3),($4),($5),($6))`, name, surname, age, gender, login,password)
 	if s!=nil {
-		fmt.Println(`cannot registre the new user`, s)
+		fmt.Println(`cannot register the new user`, s)
 		return s
 	}
 	fmt.Println(`new user is registered!`)
