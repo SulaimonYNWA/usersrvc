@@ -147,8 +147,7 @@ func Authorization(database *sql.DB, id int64) {
 //1
 func CheckBalance(database *sql.DB, id int64) {
 	var amount int64
-	row := database.QueryRow(`select amount from accaunts
-where user_id = ($1)`, id)
+	row := database.QueryRow(db.CheckBalance, id)
 	_ = row.Scan(
 		&amount,
 	)
@@ -158,7 +157,7 @@ where user_id = ($1)`, id)
 //2
 func Transfer(database *sql.DB, id, sum, number2 int64) {
 	var amount, number int64
-	row := database.QueryRow(`select amount, number from accaunts where user_id =($1)`, id)
+	row := database.QueryRow(db.SenderAmount, id)
 	_ = row.Scan(
 		&amount,
 		&number,
@@ -176,7 +175,7 @@ func Transfer(database *sql.DB, id, sum, number2 int64) {
 		}
 	}
 
-	row = database.QueryRow(`select amount from accaunts where number = ($2) `, number2)
+	row = database.QueryRow(db.ReceiverAmount, number2)
 	_ = row.Scan(
 		&amount,
 	)
@@ -191,13 +190,11 @@ func Transfer(database *sql.DB, id, sum, number2 int64) {
 	models.AddTransaction(database, number, number2, sum, newAmount)
 }
 
-//3 Оплата услуг
-
-//4 история транзакций
+//3 история транзакций
 func Archive(database *sql.DB, sender int64) {
 	transaction := models.Transaction{}
 
-	rows, err := database.Query(`select id, date,time,amount, sender_number, receiver_number, available_limit from archive  where sender_number = ($1)`, sender)
+	rows, err := database.Query(db.Archive, sender)
 	if err != nil {
 		log.Println(err, `users are not selected`)
 	}
@@ -221,11 +218,11 @@ func Archive(database *sql.DB, sender int64) {
 	}
 }
 
-//5 список банкоматов
+//4 список банкоматов
 func ATMs(database *sql.DB) {
 	var id int64
 	var address string
-	rows, err := database.Query(`select id, address from ATMs `)
+	rows, err := database.Query(db.ATMs)
 	if err != nil {
 		log.Println(err, `not selected`)
 	}
@@ -244,7 +241,7 @@ func ATMs(database *sql.DB) {
 
 }
 
-//6 добавть банкомат
+//5 добавть банкомат
 func AddNewATM(database *sql.DB) (ok bool) {
 
 	fmt.Println(
@@ -278,12 +275,12 @@ func AddNewATM(database *sql.DB) (ok bool) {
 	return
 }
 
-//7 список пользователей
+//6 список пользователей
 func Users(database *sql.DB) {
 	var id, age int64
 	var name, surname string
 
-	rows, err := database.Query(`select id, age, name, surname from users `)
+	rows, err := database.Query(db.ShowUsers)
 	if err != nil {
 		log.Println(err, `users are not selected`)
 	}
@@ -303,7 +300,7 @@ func Users(database *sql.DB) {
 	return
 }
 
-//8 добавить пользователя
+//7 добавить пользователя
 func Registration(database *sql.DB) (err error) {
 	//var User models.User
 	var name, surname, gender, login, password string
@@ -320,7 +317,7 @@ func Registration(database *sql.DB) (err error) {
 	fmt.Scan(&login)
 	fmt.Println(`password: `)
 	fmt.Scan(&password)
-	_, s := database.Exec(`insert into users(name, surname,age, gender, login, password) values (($1),($2),($3),($4),($5),($6))`, name, surname, age, gender, login, password)
+	_, s := database.Exec(db.AddUser, name, surname, age, gender, login, password)
 	if s != nil {
 		fmt.Println(`cannot register the new user`, s)
 		return s
